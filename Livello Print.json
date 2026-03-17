@@ -1,0 +1,319 @@
+{
+  "name": "Livello Print",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "livello-print",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "af39007e-bce0-4206-a5db-de4c1de96d3c",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ],
+      "webhookId": "livello-print-webhook"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const payload = $json.body ?? $json;\nconst inputList = Array.isArray(payload.workflows)\n  ? payload.workflows\n  : payload.workflow\n    ? [payload.workflow]\n    : [];\n\nif (!inputList.length) {\n  throw new Error('Send one or more workflows in body.workflows or body.workflow.');\n}\n\nconst workflows = inputList.map((entry, index) => {\n  if (typeof entry === 'string') {\n    try {\n      return JSON.parse(entry);\n    } catch (error) {\n      throw new Error(`Workflow ${index + 1} is not valid JSON.`);\n    }\n  }\n  if (entry && typeof entry === 'object') return entry;\n  throw new Error(`Workflow ${index + 1} must be an object or a JSON string.`);\n});\n\nreturn [{\n  json: {\n    workflows,\n    meta: {\n      language: String(payload.language ?? 'it').trim() || 'it',\n      audience: String(payload.audience ?? 'stakeholders').trim() || 'stakeholders',\n      project_title: String(payload.project_title ?? 'Livello Print - Analisi Workflow').trim(),\n      subtitle: String(payload.subtitle ?? 'Presentazione automatica dei processi e delle automazioni').trim(),\n      created_at: new Date().toISOString(),\n    },\n    config: {\n      openai_api_key: 'REPLACE_OPENAI_API_KEY',\n      openai_model: 'REPLACE_OPENAI_MODEL',\n      google_slides_bearer_token: 'REPLACE_GOOGLE_SLIDES_BEARER_TOKEN',\n      max_workflows: 10,\n      max_slides: 14,\n    },\n  },\n}];"
+      },
+      "id": "4b3b6ac9-9eb2-458b-962b-d24d6c4f7ac0",
+      "name": "Normalize Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const source = $json;\nconst workflows = source.workflows.slice(0, source.config.max_workflows || 10);\n\nconst toService = (type = '') => {\n  const value = String(type).toLowerCase();\n  if (value.includes('openai')) return 'OpenAI';\n  if (value.includes('googlesheets')) return 'Google Sheets';\n  if (value.includes('googledrive')) return 'Google Drive';\n  if (value.includes('googleslides')) return 'Google Slides';\n  if (value.includes('github')) return 'GitHub';\n  if (value.includes('webhook')) return 'Webhook';\n  if (value.includes('httprequest')) return 'HTTP Request';\n  if (value.includes('tavily')) return 'Tavily';\n  if (value.includes('email')) return 'Email';\n  if (value.includes('code')) return 'Code';\n  if (value.includes('set')) return 'Set';\n  if (value.includes('manualtrigger')) return 'Manual Trigger';\n  if (value.includes('agent')) return 'AI Agent';\n  return type.split('.').pop() || type;\n};\n\nconst summarizeWorkflow = (workflow, index) => {\n  const nodes = Array.isArray(workflow.nodes) ? workflow.nodes : [];\n  const connections = workflow.connections && typeof workflow.connections === 'object' ? workflow.connections : {};\n  const nodeByName = new Map(nodes.map((node) => [node.name, node]));\n  const incoming = new Map(nodes.map((node) => [node.name, 0]));\n  const outgoingMain = new Map(nodes.map((node) => [node.name, []]));\n\n  for (const [sourceName, sourceConnections] of Object.entries(connections)) {\n    for (const [channelName, channelGroups] of Object.entries(sourceConnections || {})) {\n      for (const group of channelGroups || []) {\n        for (const link of group || []) {\n          incoming.set(link.node, (incoming.get(link.node) || 0) + 1);\n          if (channelName === 'main') {\n            outgoingMain.get(sourceName)?.push(link.node);\n          }\n        }\n      }\n    }\n  }\n\n  const roots = nodes\n    .filter((node) => (incoming.get(node.name) || 0) === 0)\n    .sort((a, b) => (a.position?.[0] ?? 0) - (b.position?.[0] ?? 0) || (a.position?.[1] ?? 0) - (b.position?.[1] ?? 0))\n    .map((node) => node.name);\n\n  const orderedNodes = [...nodes]\n    .sort((a, b) => (a.position?.[0] ?? 0) - (b.position?.[0] ?? 0) || (a.position?.[1] ?? 0) - (b.position?.[1] ?? 0))\n    .map((node) => ({\n      name: node.name,\n      type: node.type,\n      disabled: node.disabled === true,\n    }));\n\n  const tracePath = (startName) => {\n    const visited = new Set();\n    const path = [];\n    let current = startName;\n    while (current && !visited.has(current) && path.length < 8) {\n      visited.add(current);\n      path.push(current);\n      const candidates = outgoingMain.get(current) || [];\n      if (!candidates.length) break;\n      candidates.sort((left, right) => {\n        const a = nodeByName.get(left);\n        const b = nodeByName.get(right);\n        return (a?.position?.[0] ?? 0) - (b?.position?.[0] ?? 0) || (a?.position?.[1] ?? 0) - (b?.position?.[1] ?? 0);\n      });\n      current = candidates[0];\n    }\n    return path;\n  };\n\n  const mainPaths = roots.slice(0, 3).map((root) => tracePath(root));\n  const services = [...new Set(nodes.map((node) => toService(node.type)).filter(Boolean))];\n  const disabledNodes = nodes.filter((node) => node.disabled === true).map((node) => node.name);\n  const aiNodes = nodes.filter((node) => String(node.type).toLowerCase().includes('langchain') || String(node.type).toLowerCase().includes('openai')).map((node) => node.name);\n  const terminalNodes = nodes.filter((node) => !(outgoingMain.get(node.name) || []).length).map((node) => node.name);\n\n  return {\n    workflow_index: index + 1,\n    name: String(workflow.name || `Workflow ${index + 1}`),\n    node_count: nodes.length,\n    root_nodes: roots,\n    terminal_nodes: terminalNodes.slice(0, 6),\n    services,\n    ai_nodes: aiNodes,\n    disabled_nodes: disabledNodes,\n    ordered_nodes: orderedNodes.slice(0, 18),\n    main_paths: mainPaths,\n  };\n};\n\nreturn [{\n  json: {\n    ...source,\n    workflow_facts: workflows.map(summarizeWorkflow),\n  },\n}];"
+      },
+      "id": "2e1e811d-313f-43c7-9eb5-f8afc98f9e54",
+      "name": "Extract Workflow Facts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $('Normalize Input').first().json.config.openai_api_key }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  model: $('Normalize Input').first().json.config.openai_model,\n  temperature: 0.2,\n  response_format: { type: 'json_object' },\n  messages: [\n    {\n      role: 'system',\n      content: 'You are a workflow analyst and presentation designer. Analyze automation workflows and return ONLY valid JSON. The presentation language is Italian. Create a concise Google Slides deck that explains the workflows for a mixed business and technical audience. Return JSON with this exact structure: {\"presentation_title\":\"string\",\"cover_subtitle\":\"string\",\"slides\":[{\"title\":\"string\",\"body\":\"string\",\"kind\":\"cover|overview|workflow|recommendations\"}]}. Rules: include 1 cover slide, 1 overview slide, 1 slide per workflow, and 1 recommendations slide. Each body must be concise, clear, and fit in a single text box. Use plain text with line breaks and short bullets starting with a hyphen.'\n    },\n    {\n      role: 'user',\n      content: `Project title: ${$json.meta.project_title}\\nAudience: ${$json.meta.audience}\\nLanguage: ${$json.meta.language}\\nWorkflow facts:\\n${JSON.stringify($json.workflow_facts, null, 2)}`\n    }\n  ]\n} }}"
+      },
+      "id": "a49457b6-f96d-4ebb-af70-15dd6b4d353c",
+      "name": "Ask OpenAI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        940,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const source = $('Extract Workflow Facts').first().json;\nconst content = $json.choices?.[0]?.message?.content ?? '';\nlet parsed;\ntry {\n  parsed = typeof content === 'string' ? JSON.parse(content) : content;\n} catch (error) {\n  parsed = {};\n}\n\nconst fallbackSlides = [];\nfallbackSlides.push({\n  kind: 'cover',\n  title: source.meta.project_title,\n  body: source.meta.subtitle,\n});\nfallbackSlides.push({\n  kind: 'overview',\n  title: 'Panoramica generale',\n  body: `- Workflow analizzati: ${source.workflow_facts.length}\\n- Obiettivo: spiegare trigger, flussi, integrazioni e output\\n- Audience: ${source.meta.audience}`,\n});\nfor (const fact of source.workflow_facts) {\n  fallbackSlides.push({\n    kind: 'workflow',\n    title: fact.name,\n    body: `- Nodi totali: ${fact.node_count}\\n- Trigger: ${fact.root_nodes.join(', ') || 'non rilevato'}\\n- Servizi: ${fact.services.join(', ') || 'n/d'}\\n- Flusso principale: ${(fact.main_paths[0] || []).join(' -> ') || 'n/d'}\\n- Output finali: ${fact.terminal_nodes.join(', ') || 'n/d'}`,\n  });\n}\nfallbackSlides.push({\n  kind: 'recommendations',\n  title: 'Osservazioni finali',\n  body: '- Standardizzare naming e documentazione\\n- Evidenziare input, decisioni e output chiave\\n- Rendere ogni workflow piu facilmente manutenibile',\n});\n\nconst slides = Array.isArray(parsed.slides) && parsed.slides.length ? parsed.slides : fallbackSlides;\nconst clean = (value, max = 1200) => String(value ?? '').replace(/\\r/g, '').trim().slice(0, max);\nconst limitedSlides = slides.slice(0, source.config.max_slides || 14).map((slide, index) => ({\n  kind: clean(slide.kind || 'workflow', 30),\n  title: clean(slide.title || `Slide ${index + 1}`, 120),\n  body: clean(slide.body || '', 1400),\n}));\n\nreturn [{\n  json: {\n    presentation_title: clean(parsed.presentation_title || source.meta.project_title, 160),\n    cover_subtitle: clean(parsed.cover_subtitle || source.meta.subtitle, 200),\n    slides: limitedSlides,\n  },\n}];"
+      },
+      "id": "6290449d-6756-4279-aff8-80c22010ae52",
+      "name": "Parse Slide Plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1180,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slides.googleapis.com/v1/presentations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $('Normalize Input').first().json.config.google_slides_bearer_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { title: $('Parse Slide Plan').first().json.presentation_title } }}"
+      },
+      "id": "29439ec1-9b1a-40f5-add3-e2605f0b3e8c",
+      "name": "Create Presentation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1420,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const created = $json;\nconst plan = $('Parse Slide Plan').first().json;\nconst requests = [];\nconst existingSlides = Array.isArray(created.slides) ? created.slides.map((slide) => slide.objectId).filter(Boolean) : [];\nfor (const slideId of existingSlides) {\n  requests.push({ deleteObject: { objectId: slideId } });\n}\n\nconst slides = Array.isArray(plan.slides) ? plan.slides : [];\nslides.forEach((slide, index) => {\n  const slideId = `slide_${index + 1}`;\n  const titleId = `title_${index + 1}`;\n  const bodyId = `body_${index + 1}`;\n  requests.push({\n    createSlide: {\n      objectId: slideId,\n      insertionIndex: index,\n    },\n  });\n  requests.push({\n    createShape: {\n      objectId: titleId,\n      shapeType: 'TEXT_BOX',\n      elementProperties: {\n        pageObjectId: slideId,\n        size: {\n          width: { magnitude: 650, unit: 'PT' },\n          height: { magnitude: 42, unit: 'PT' },\n        },\n        transform: {\n          scaleX: 1,\n          scaleY: 1,\n          translateX: 35,\n          translateY: 22,\n          unit: 'PT',\n        },\n      },\n    },\n  });\n  requests.push({ insertText: { objectId: titleId, insertionIndex: 0, text: slide.title || `Slide ${index + 1}` } });\n  requests.push({\n    createShape: {\n      objectId: bodyId,\n      shapeType: 'TEXT_BOX',\n      elementProperties: {\n        pageObjectId: slideId,\n        size: {\n          width: { magnitude: 650, unit: 'PT' },\n          height: { magnitude: 390, unit: 'PT' },\n        },\n        transform: {\n          scaleX: 1,\n          scaleY: 1,\n          translateX: 35,\n          translateY: 88,\n          unit: 'PT',\n        },\n      },\n    },\n  });\n  requests.push({ insertText: { objectId: bodyId, insertionIndex: 0, text: slide.body || '' } });\n});\n\nreturn [{\n  json: {\n    presentationId: created.presentationId,\n    presentationUrl: `https://docs.google.com/presentation/d/${created.presentationId}/edit`,\n    requests,\n    slides_count: slides.length,\n    plan,\n  },\n}];"
+      },
+      "id": "6cde3e23-bfcf-46f7-9f5f-7872b376102e",
+      "name": "Build Slides Batch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://slides.googleapis.com/v1/presentations/' + $json.presentationId + ':batchUpdate' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $('Normalize Input').first().json.config.google_slides_bearer_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { requests: $json.requests } }}"
+      },
+      "id": "ab32bba5-7aea-43be-9352-59bf40782198",
+      "name": "Apply Slides Batch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const batch = $('Build Slides Batch').first().json;\nconst plan = batch.plan || {};\nreturn [{\n  json: {\n    ok: true,\n    presentation_id: batch.presentationId,\n    presentation_url: batch.presentationUrl,\n    presentation_title: plan.presentation_title || batch.plan?.presentation_title || $('Parse Slide Plan').first().json.presentation_title,\n    slides_created: batch.slides_count,\n    slides: plan.slides || $('Parse Slide Plan').first().json.slides,\n    message: 'Google Slides presentation created successfully.',\n  },\n}];"
+      },
+      "id": "82f2a82b-13d0-4a55-b6be-8545e1d50806",
+      "name": "Build Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2140,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "id": "6372f7f2-0d87-414c-ab86-d535af039e18",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2380,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Extract Workflow Facts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Workflow Facts": {
+      "main": [
+        [
+          {
+            "node": "Ask OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Parse Slide Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Slide Plan": {
+      "main": [
+        [
+          {
+            "node": "Create Presentation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Presentation": {
+      "main": [
+        [
+          {
+            "node": "Build Slides Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Slides Batch": {
+      "main": [
+        [
+          {
+            "node": "Apply Slides Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply Slides Batch": {
+      "main": [
+        [
+          {
+            "node": "Build Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "versionId": "1c491e39-4cd3-41be-8169-8a73e5ea9cef",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "id": "workflow-livello-print",
+  "tags": []
+}

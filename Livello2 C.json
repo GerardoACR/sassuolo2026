@@ -1,0 +1,551 @@
+{
+  "name": "Livello2 C",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -304,
+        224
+      ],
+      "id": "7085793a-7ff5-4d2e-99b3-6b799750afa4",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "AN4WawaSh46LQXSR",
+          "name": "OpenAi account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1gmr93I6K4bz4WhVML6lZaSBNuBxuim897LcsbeLJR6Q",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Foglio1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gmr93I6K4bz4WhVML6lZaSBNuBxuim897LcsbeLJR6Q/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        -192,
+        256
+      ],
+      "id": "cc9e1a82-33ab-4dc7-8a9c-1ceb2ea010a9",
+      "name": "Innovation database",
+      "disabled": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BVaY0d66FTkfO8L9",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1vyDKLC6im12UYvTPt541jLUM7jgqeMG6fQaiVPF6x7U",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Foglio1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vyDKLC6im12UYvTPt541jLUM7jgqeMG6fQaiVPF6x7U/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        -16,
+        240
+      ],
+      "id": "d4452caf-f56a-4b3f-b3a0-57598dd496b0",
+      "name": "Web Sources",
+      "disabled": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BVaY0d66FTkfO8L9",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "Esegui una sessione di ricerca autonoma sui temi della ceramica, dei materiali, degli adesivi cementizi, degli smalti, dei pigmenti, delle superfici opache, della rettifica, della sostenibilita' e delle normative tecniche.\n\nDevi produrre piu' risultati realmente diversi tra loro e salvabili in database.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Per questo workflow usa solo il tool Tavily. Non usare Google Sheets e non usare GitHub come strumenti di ricerca.\n\nMetodo di ricerca obbligatorio:\n- Esegui almeno 4 ricerche Tavily separate e con query diverse tra loro.\n- Ogni query deve esplorare un angolo diverso, per esempio: brevetti, paper scientifici, normative tecniche, schede tecniche o report.\n- Non ripetere la stessa query con piccole variazioni.\n- Evita risultati duplicati per URL, titolo o contenuto molto simile.\n- Se trovi risultati troppo simili, continua a cercare finche' ottieni elementi distinti.\n\nUsa e combina queste keyword in query diverse e focalizzate:\nIndustria ceramica / materiali, industria ceramica, produzione di piastrelle, materiali ceramici, rivestimenti ceramici, gres porcellanato, superfici ceramiche, formulazione chimica, sviluppo di formulazioni, ricerca e sviluppo, innovazione di prodotto, progettazione dei materiali, ottimizzazione delle ricette, adesivi cementizi, malte tecniche, leganti cementizi, materiali per posa, sistemi di incollaggio, smalti ceramici, fritte vetrose, pigmenti ceramici, coloranti inorganici, composizioni vetrose, sinterizzazione, cottura ceramica, processo di smaltatura, trattamento termico, tecnologia dei materiali, formulazione vincente, vantaggio competitivo, sviluppo di nuovi materiali, brevetti industriali, innovazione di processo.\n\nObiettivo finale:\n- Restituisci da 3 a 6 risultati finali davvero diversi tra loro.\n- Ogni risultato deve essere pertinente alle keyword.\n- Ogni risultato deve appartenere a una sola categoria principale tra: smalti, pigmenti, adesivi cementizi, rettifica, superfici opache, sostenibilita_decarbonizzazione, normative_tecniche.\n- tipo deve essere uno tra: brevetto, paper, normativa, scheda_tecnica, report.\n- keywords massimo 6.\n- riassunto massimo 50 parole.\n- Inserisci una fonte leggibile e una url reale.\n- Inserisci anche query_usata per sapere quale ricerca ha generato il risultato.\n\nRestituisci solo JSON valido nel formato richiesto dal parser.",
+          "maxIterations": 10
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -240,
+        32
+      ],
+      "id": "3e50e9d0-1942-4596-8b31-1c5933abcaf8",
+      "name": "ARIA"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "repository",
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "value": "GerardoACR",
+          "mode": "list",
+          "cachedResultName": "GerardoACR",
+          "cachedResultUrl": "https://github.com/GerardoACR"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "sassuolo2026",
+          "mode": "list",
+          "cachedResultName": "sassuolo2026",
+          "cachedResultUrl": "https://github.com/GerardoACR/sassuolo2026"
+        }
+      },
+      "type": "n8n-nodes-base.githubTool",
+      "typeVersion": 1.1,
+      "position": [
+        160,
+        240
+      ],
+      "id": "16e78d5f-a91b-4534-9c04-c09a95c37497",
+      "name": "Get a repository in GitHub",
+      "disabled": true,
+      "webhookId": "76ca5533-051b-463b-b2f0-01c412e0672a",
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "E5D0uC4szTDcGeIT",
+          "name": "GitHub account 3"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -512,
+        32
+      ],
+      "id": "8773207a-4feb-4103-9202-0e0934278271",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const payload = $input.first().json.output ?? $input.first().json;\nconst rows = Array.isArray(payload.rows) ? payload.rows : [];\nif (!rows.length) {\n  throw new Error('ARIA non ha restituito rows[] con risultati multipli.');\n}\n\nconst today = new Date().toISOString().slice(0, 10);\nconst seen = new Set();\nconst items = [];\n\nfor (const row of rows) {\n  const url = String(row.url ?? '').trim();\n  const title = String(row.titolo ?? '').trim();\n  const key = `${url}||${title}`.toLowerCase();\n  if (!url || !title || seen.has(key)) continue;\n  seen.add(key);\n\n  const keywords = Array.isArray(row.keywords)\n    ? row.keywords.filter(Boolean).map((value) => String(value).trim()).join(', ')\n    : String(row.keywords ?? '').trim();\n\n  items.push({\n    json: {\n      data: String(row.data ?? today).trim() || today,\n      categoria: String(row.categoria ?? '').trim(),\n      tipo: String(row.tipo ?? '').trim(),\n      titolo: title,\n      fonte: String(row.fonte ?? row.url ?? '').trim(),\n      keywords,\n      riassunto: String(row.riassunto ?? '').trim(),\n      url,\n      query_usata: String(row.query_usata ?? '').trim(),\n    },\n  });\n}\n\nif (!items.length) {\n  throw new Error('Nessun risultato unico da salvare nel foglio.');\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        112,
+        32
+      ],
+      "id": "cf0b4b49-6f3b-481c-a20f-e8df76161d07",
+      "name": "Expand Unique Rows"
+    },
+    {
+      "parameters": {
+        "query": "={{ $fromAI('Query', 'Scrivi una query Tavily specifica, mirata e diversa dalle precedenti, basata sulle keyword della ceramica e dei materiali. Ogni query deve esplorare un solo angolo preciso, ad esempio brevetti, paper, normative, schede tecniche o report.', 'string') }}",
+        "options": {
+          "search_depth": "advanced"
+        }
+      },
+      "type": "@tavily/n8n-nodes-tavily.tavilyTool",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        368
+      ],
+      "id": "ab051f99-f3bd-464b-9d09-810d3aee2dcf",
+      "name": "Search in Tavily",
+      "credentials": {
+        "tavilyApi": {
+          "id": "O1xtt9sudWMPGVfx",
+          "name": "Tavily account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"rows\": [\n    {\n      \"data\": \"2026-03-14\",\n      \"categoria\": \"smalti\",\n      \"tipo\": \"paper\",\n      \"titolo\": \"Advanced ceramic glaze formulations for matte surfaces\",\n      \"fonte\": \"Journal of the European Ceramic Society\",\n      \"keywords\": [\"smalti\", \"ceramica\", \"superfici opache\", \"formulazione\"],\n      \"riassunto\": \"Paper scientifico su nuove formulazioni di smalti ceramici per superfici opache.\",\n      \"url\": \"https://example.com/paper-smalti\",\n      \"query_usata\": \"matte ceramic glaze formulation paper\"\n    },\n    {\n      \"data\": \"2026-03-14\",\n      \"categoria\": \"normative_tecniche\",\n      \"tipo\": \"normativa\",\n      \"titolo\": \"Updated technical standard for ceramic installation systems\",\n      \"fonte\": \"Official Journal / technical body\",\n      \"keywords\": [\"normative\", \"installazione\", \"ceramica\"],\n      \"riassunto\": \"Aggiornamento normativo rilevante per sistemi di posa e materiali ceramici.\",\n      \"url\": \"https://example.com/normativa-ceramica\",\n      \"query_usata\": \"ceramic installation standard update\"\n    }\n  ]\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        16,
+        416
+      ],
+      "id": "1202ac30-b9e8-4390-a358-a161b445c870",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        16,
+        672
+      ],
+      "id": "94d401a6-0098-497b-8f8a-793c49f1d289",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "AN4WawaSh46LQXSR",
+          "name": "OpenAi account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1b7ky-tAUfKjqOzIxp8jabMG4PWgfVmIOnz6Jv7RntUs",
+          "mode": "list",
+          "cachedResultName": "databaseRicerche",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1b7ky-tAUfKjqOzIxp8jabMG4PWgfVmIOnz6Jv7RntUs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Foglio1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1b7ky-tAUfKjqOzIxp8jabMG4PWgfVmIOnz6Jv7RntUs/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "data": "={{ $json.data }}",
+            "url": "={{ $json.url }}",
+            "keywords": "={{ $json.keywords }}",
+            "categoria": "={{ $json.categoria }}",
+            "tipo": "={{ $json.tipo }}",
+            "titolo": "={{ $json.titolo }}",
+            "fonte": "={{ $json.fonte }}",
+            "riassunto": "={{ $json.riassunto }}"
+          },
+          "matchingColumns": [
+            "data"
+          ],
+          "schema": [
+            {
+              "id": "data",
+              "displayName": "data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "categoria",
+              "displayName": "categoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "tipo",
+              "displayName": "tipo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "titolo",
+              "displayName": "titolo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "fonte",
+              "displayName": "fonte",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "keywords",
+              "displayName": "keywords",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "riassunto",
+              "displayName": "riassunto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        320,
+        32
+      ],
+      "id": "01662227-fc5b-41dc-b056-83e22f9f9591",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "IuO98s7yuqFLD6qx",
+          "name": "Sassuolo2026"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\nif (!items.length) {\n  throw new Error('Nessun aggiornamento disponibile per l\\'email.');\n}\n\nconst rows = items.map((item) => item.json);\nconst count = rows.length;\nconst today = new Date().toISOString().slice(0, 10);\nconst sheetUrl = 'https://docs.google.com/spreadsheets/d/1b7ky-tAUfKjqOzIxp8jabMG4PWgfVmIOnz6Jv7RntUs/edit#gid=0';\nconst toEmail = 'Elena <REPLACE_ELENA_EMAIL>';\nconst fromEmail = 'ARIA <REPLACE_SMTP_SENDER_EMAIL>';\n\nconst intro = count === 1\n  ? 'Oggi ho individuato 1 nuovo aggiornamento rilevante per la tua attivita\\' di ricerca.'\n  : `Oggi ho individuato ${count} nuovi aggiornamenti rilevanti per la tua attivita\\' di ricerca.`;\n\nconst cards = rows.map((row, index) => {\n  const safe = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\n  const titolo = safe(row.titolo);\n  const categoria = safe(row.categoria);\n  const tipo = safe(row.tipo);\n  const fonte = safe(row.fonte || row.url);\n  const riassunto = safe(row.riassunto);\n  const keywords = safe(row.keywords);\n  const url = String(row.url ?? '').trim();\n  return `\n    <div style=\"margin:0 0 18px 0;padding:16px;border:1px solid #d9dde3;border-radius:10px;background:#ffffff;\">\n      <p style=\"margin:0 0 8px 0;font-size:12px;color:#667085;\">Aggiornamento ${index + 1}</p>\n      <h3 style=\"margin:0 0 8px 0;font-size:18px;color:#101828;\">${titolo}</h3>\n      <p style=\"margin:0 0 8px 0;font-size:14px;color:#344054;\"><strong>Categoria:</strong> ${categoria} | <strong>Tipo:</strong> ${tipo}</p>\n      <p style=\"margin:0 0 8px 0;font-size:14px;color:#344054;\"><strong>Fonte:</strong> ${fonte}</p>\n      <p style=\"margin:0 0 8px 0;font-size:14px;color:#344054;\"><strong>Keywords:</strong> ${keywords}</p>\n      <p style=\"margin:0 0 10px 0;font-size:14px;line-height:1.5;color:#101828;\">${riassunto}</p>\n      <p style=\"margin:0;\"><a href=\"${url}\" style=\"color:#175cd3;text-decoration:none;\">Apri la fonte originale</a></p>\n    </div>\n  `;\n}).join('');\n\nconst html = `\n  <div style=\"font-family:Arial,Helvetica,sans-serif;background:#f5f7fa;padding:24px;color:#101828;\">\n    <div style=\"max-width:760px;margin:0 auto;background:#f5f7fa;\">\n      <h2 style=\"margin:0 0 12px 0;\">Ciao Elena,</h2>\n      <p style=\"margin:0 0 16px 0;font-size:15px;line-height:1.6;\">${intro}</p>\n      <p style=\"margin:0 0 24px 0;font-size:15px;line-height:1.6;\">Di seguito trovi un riassunto sintetico delle ultime novita' raccolte da ARIA.</p>\n      ${cards}\n      <div style=\"margin-top:24px;padding:18px;border-radius:10px;background:#eaf2ff;\">\n        <p style=\"margin:0 0 10px 0;font-size:15px;\"><strong>Per consultare l'elenco completo:</strong></p>\n        <p style=\"margin:0;\"><a href=\"${sheetUrl}\" style=\"color:#175cd3;text-decoration:none;\">Apri il Google Sheet con tutte le ricerche aggiornate</a></p>\n      </div>\n      <p style=\"margin:24px 0 0 0;font-size:14px;color:#475467;\">Un saluto,<br>ARIA</p>\n    </div>\n  </div>\n`;\n\nreturn [{\n  json: {\n    toEmail,\n    fromEmail,\n    subject: `ARIA - Aggiornamento ricerche del ${today}`,\n    html,\n    sheetUrl,\n    total_updates: count,\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        32
+      ],
+      "id": "80457fe5-d36b-4140-95b1-6c125910c974",
+      "name": "Prepare Email Digest"
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.fromEmail }}",
+        "toEmail": "={{ $json.toEmail }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "html",
+        "html": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        784,
+        32
+      ],
+      "id": "008e76c4-e95a-4b7d-b7bb-e59a75fbe515",
+      "name": "Send Email to Elena",
+      "credentials": {}
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "ARIA",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Innovation database": {
+      "ai_tool": [
+        [
+          {
+            "node": "ARIA",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Web Sources": {
+      "ai_tool": [
+        [
+          {
+            "node": "ARIA",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ARIA": {
+      "main": [
+        [
+          {
+            "node": "Expand Unique Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a repository in GitHub": {
+      "ai_tool": [
+        [
+          {
+            "node": "ARIA",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "ARIA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expand Unique Rows": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Prepare Email Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Email Digest": {
+      "main": [
+        [
+          {
+            "node": "Send Email to Elena",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search in Tavily": {
+      "ai_tool": [
+        [
+          {
+            "node": "ARIA",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "ARIA",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "932035ad-f1f4-4b3c-a9b1-542ee2f98c8e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "101b186c40a0bf3b8133c401b4ff29e352f822265e3a6f00eda2c71912e34254"
+  },
+  "id": "TVNHvfBoFCfm4yhf",
+  "tags": []
+}

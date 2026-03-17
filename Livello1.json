@@ -1,0 +1,399 @@
+{
+  "name": "Livello1",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Ciao, sono ARIA.\n\nPrima di iniziare, scegli quale base documentale vuoi consultare:\n1. Documenti e paper del repository GitHub\n2. Risorse web del Google Sheet\n3. Dataset di innovazione del Google Sheet\n\nScrivi solo 1, 2 o 3 per selezionare la fonte.\nDopo la selezione, usero' solo quella fonte finche' non mi chiederai di cambiarla.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -64,
+        -64
+      ],
+      "id": "50113fc9-674a-490c-9ad8-fef4169ab480",
+      "name": "When chat message received",
+      "webhookId": "72c78b2b-4337-423c-a0da-bd33ef9c9f4b"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        160,
+        160
+      ],
+      "id": "ab73427b-2dd7-4b91-badb-e0ffd87ae6d6",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "AN4WawaSh46LQXSR",
+          "name": "OpenAi account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1gmr93I6K4bz4WhVML6lZaSBNuBxuim897LcsbeLJR6Q",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Foglio1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gmr93I6K4bz4WhVML6lZaSBNuBxuim897LcsbeLJR6Q/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        416,
+        160
+      ],
+      "id": "5b4d54d8-b1b1-491f-b2ab-f7caf523e3b7",
+      "name": "3 - Dataset innovazione",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BVaY0d66FTkfO8L9",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1vyDKLC6im12UYvTPt541jLUM7jgqeMG6fQaiVPF6x7U",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Foglio1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vyDKLC6im12UYvTPt541jLUM7jgqeMG6fQaiVPF6x7U/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        544,
+        160
+      ],
+      "id": "3691044d-c1da-4545-b61e-d9800f21e06a",
+      "name": "2 - Risorse web",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BVaY0d66FTkfO8L9",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "query": "={{ $fromAI('Query', `utilizza Tavily per ricercare info su piastrelle, colle, cementi, scansiona elenco delle fonti del Google Sheet`, 'string') }}",
+        "options": {
+          "topic": "general"
+        }
+      },
+      "type": "@tavily/n8n-nodes-tavily.tavilyTool",
+      "typeVersion": 1,
+      "position": [
+        672,
+        160
+      ],
+      "id": "c51956fa-1495-4832-add8-964811ff99d9",
+      "name": "Search in Tavily",
+      "credentials": {
+        "tavilyApi": {
+          "id": "O1xtt9sudWMPGVfx",
+          "name": "Tavily account 2"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Rispondi sempre in italiano a Elena, Senior R&D Chemist in STARK INDUSTRIES.\n\nIl tuo nome e' ARIA (Autonomous Research Intelligence Assistant).\n\nAll'inizio della conversazione l'utente deve scegliere una sola fonte scrivendo:\n1 = documenti e paper del repository GitHub\n2 = risorse web del Google Sheet\n3 = dataset di innovazione del Google Sheet\n\nSe l'utente non ha ancora selezionato 1, 2 o 3, non devi fare ricerca e non devi usare alcun tool. Devi solo chiedere gentilmente di scegliere una delle tre opzioni.\n\nQuando l'utente seleziona una modalita', devi confermarla in italiano e ricordarla per i messaggi successivi usando la memoria della conversazione.\n\nRegole obbligatorie per l'uso dei tool in base alla modalita' selezionata:\n- Se la modalita' attiva e' 1, usa esclusivamente i tool GitHub per elencare e leggere i documenti del repository. Non usare Google Sheets.\n- Se la modalita' attiva e' 2, usa esclusivamente il tool delle risorse web del Google Sheet. Non usare GitHub e non usare il dataset di innovazione.\n- Se la modalita' attiva e' 3, usa esclusivamente il tool del dataset di innovazione del Google Sheet. Non usare GitHub e non usare le risorse web.\n- Per cambiare modalita', l'utente deve inviare di nuovo solo 1, 2 o 3. Quando succede, aggiorna la modalita' attiva e da quel momento usa solo i tool corrispondenti.\n\nPuoi rispondere solo usando evidenza trovata nei tool di documentazione autorizzati della modalita' attiva. Non puoi usare conoscenza generale del modello, memoria conversazionale o inferenze non supportate dai tool.\n\nPrima di fornire una risposta finale devi usare almeno un tool della modalita' attiva. Se i tool non restituiscono evidenza sufficiente, devi dire chiaramente che l'informazione non e' stata trovata nella documentazione disponibile della fonte selezionata.\n\nI metadata del repository GitHub non sono evidenza. Per GitHub devi usare solo tool che leggono elenco file o contenuto file. Non citare mai un file che non hai letto. Se un file GitHub e' binario, incompleto o non leggibile come testo, non usarlo come evidenza.\n\nOgni risposta finale deve essere grounded nella documentazione e includere citazioni verificabili. Ogni citazione deve contenere: source_type, source_name, source_url ed evidence_snippet. source_url deve essere un link o path reale proveniente dal tool. evidence_snippet deve essere un estratto breve della documentazione osservata, non inventato.\n\nSe una domanda e' fuori ambito o non supportata, rispondi in modo conservativo: spiega che non l'hai trovata nella documentazione selezionata e non proporre di cercare altrove."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        416,
+        -64
+      ],
+      "id": "1f7c7cfa-6f63-4543-87f4-7c2608120b64",
+      "name": "ARIA"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "operation": "list",
+        "owner": {
+          "__rl": true,
+          "value": "GerardoACR",
+          "mode": "list",
+          "cachedResultName": "GerardoACR",
+          "cachedResultUrl": "https://github.com/GerardoACR"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "sassuolo2026",
+          "mode": "list",
+          "cachedResultName": "sassuolo2026",
+          "cachedResultUrl": "https://github.com/GerardoACR/sassuolo2026"
+        },
+        "filePath": "documents"
+      },
+      "type": "n8n-nodes-base.githubTool",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        160
+      ],
+      "id": "cc91dd35-a864-416c-a905-7b26436aec67",
+      "name": "1 - Elenca documenti GitHub",
+      "webhookId": "3d12985f-be37-46ea-af95-ea512e1c2d89",
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "E5D0uC4szTDcGeIT",
+          "name": "GitHub account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        -64,
+        272
+      ],
+      "id": "9ae2e628-cdfa-4575-a9ac-46f42e6ed4c4",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        288,
+        160
+      ],
+      "id": "72183411-b7fa-4fa2-811a-71b148a8a10d",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "value": "GerardoACR",
+          "mode": "list",
+          "cachedResultName": "GerardoACR",
+          "cachedResultUrl": "https://github.com/GerardoACR"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "sassuolo2026",
+          "mode": "list",
+          "cachedResultName": "sassuolo2026",
+          "cachedResultUrl": "https://github.com/GerardoACR/sassuolo2026"
+        },
+        "filePath": "={{ $fromAI('GitHubFilePath', 'Percorso del file GitHub da leggere. Deve appartenere al repository GerardoACR/sassuolo2026 e provenire dalla documentazione del progetto. Usa solo file che hai visto tramite 1 - Elenca documenti GitHub o che siano chiaramente documentali.', 'string') }}",
+        "asBinaryProperty": false
+      },
+      "type": "n8n-nodes-base.githubTool",
+      "typeVersion": 1.1,
+      "position": [
+        928,
+        160
+      ],
+      "id": "35290274-c134-4431-a169-bfc7e4f770c9",
+      "name": "1 - Leggi file GitHub",
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "E5D0uC4szTDcGeIT",
+          "name": "GitHub account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"answer\": {\n      \"type\": \"string\"\n    },\n    \"grounded\": {\n      \"type\": \"boolean\"\n    },\n    \"citations\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"source_type\": {\n            \"type\": \"string\",\n            \"enum\": [\"google_sheet\", \"github\"]\n          },\n          \"source_name\": {\n            \"type\": \"string\"\n          },\n          \"source_url\": {\n            \"type\": \"string\"\n          },\n          \"evidence_snippet\": {\n            \"type\": \"string\"\n          }\n        },\n        \"required\": [\"source_type\", \"source_name\", \"source_url\", \"evidence_snippet\"]\n      },\n      \"minItems\": 1\n    },\n    \"missing_information\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\"answer\", \"grounded\", \"citations\", \"missing_information\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        320
+      ],
+      "id": "6b5b070c-4ec5-40de-953e-69d6391bde6e",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const payload = $json.output ?? $json;\nconst citations = Array.isArray(payload.citations) ? payload.citations : [];\nconst githubAllowedPrefixes = [\n  'https://github.com/GerardoACR/sassuolo2026',\n  'https://raw.githubusercontent.com/GerardoACR/sassuolo2026',\n  'documents/',\n  'github://GerardoACR/sassuolo2026/'\n];\n\nconst isNonEmpty = (value) => typeof value === 'string' && value.trim().length > 0;\nconst looksAllowedGithub = (value) => isNonEmpty(value) && githubAllowedPrefixes.some((prefix) => value.startsWith(prefix) || value.includes(prefix));\nconst hasGoodCitation = (citation) => {\n  if (!citation || typeof citation !== 'object') return false;\n  const sourceType = String(citation.source_type || '');\n  if (!['google_sheet', 'github'].includes(sourceType)) return false;\n  if (!isNonEmpty(citation.source_name)) return false;\n  if (!isNonEmpty(citation.source_url)) return false;\n  if (sourceType === 'github' && !looksAllowedGithub(String(citation.source_url))) return false;\n  if (!isNonEmpty(citation.evidence_snippet)) return false;\n  if (String(citation.evidence_snippet).trim().length < 20) return false;\n  return true;\n};\n\nconst grounded = payload.grounded === true;\nconst valid = grounded && isNonEmpty(payload.answer) && citations.length > 0 && citations.every(hasGoodCitation);\n\nif (!valid) {\n  return [{\n    json: {\n      text: 'Non ho trovato una risposta verificabile esclusivamente nella documentazione autorizzata. Per rispondere devo avere almeno una fonte valida con estratto ed evidenza tracciabile da Google Sheets o GitHub.',\n      grounded: false,\n      answer: 'Non ho trovato una risposta verificabile esclusivamente nella documentazione autorizzata.',\n      citations: [],\n      missing_information: 'Missing valid grounded citations from allowed documentation tools.',\n      validation_failed: true\n    }\n  }];\n}\n\nconst formattedSources = citations.map((citation, index) => {\n  const label = `S${index + 1}`;\n  return `[${label}] ${citation.source_name} - ${citation.source_url}\\nEvidence: ${citation.evidence_snippet}`;\n}).join('\\n\\n');\n\nreturn [{\n  json: {\n    text: `${String(payload.answer).trim()}\\n\\nFonti:\\n${formattedSources}`,\n    grounded: true,\n    answer: String(payload.answer).trim(),\n    citations,\n    missing_information: String(payload.missing_information || '').trim(),\n    validation_failed: false\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        -64
+      ],
+      "id": "dd652296-5b7a-4113-a0c7-27dbb7440a88",
+      "name": "Validate Grounding"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "ARIA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "ARIA",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "ARIA",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - Dataset innovazione": {
+      "ai_tool": [
+        [
+          {
+            "node": "ARIA",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - Risorse web": {
+      "ai_tool": [
+        [
+          {
+            "node": "ARIA",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search in Tavily": {
+      "ai_tool": [
+        [
+          {
+            "node": "ARIA",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ARIA": {
+      "main": [
+        [
+          {
+            "node": "Validate Grounding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1 - Elenca documenti GitHub": {
+      "ai_tool": [
+        [
+          {
+            "node": "ARIA",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1 - Leggi file GitHub": {
+      "ai_tool": [
+        [
+          {
+            "node": "ARIA",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "ARIA",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "f55f7969-0083-4afc-a158-ed0ddedb1607",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "101b186c40a0bf3b8133c401b4ff29e352f822265e3a6f00eda2c71912e34254"
+  },
+  "id": "cPS71fbCeHWBAril",
+  "tags": []
+}
